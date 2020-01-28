@@ -44,7 +44,6 @@ public class EmployeeCreationController {
 	 */
 	public void createForm() {
 		this.setRadioButtons();
-		//System.out.println("Control works!");
 		this.setEmployeeForm();
 		this.setCreateHandles();
 	}
