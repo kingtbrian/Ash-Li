@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 public class Management {
 	private HashMap<Department, ArrayList<Employee>> empMap;
 	private HashMap<String, Department> deptMap;
-	private ArrayList<Employee> empList;
+	private HashMap<Integer, Employee> empList;
 	private ArrayList<Department> deptList;
 	private FileOps fileOps;
 
@@ -40,7 +40,7 @@ public class Management {
 	}
 
 	public void initList() {
-		this.empList = new ArrayList<Employee>();
+		this.empList = new HashMap<Integer, Employee>();
 		this.deptList = new ArrayList<Department>();
 	}
 
@@ -48,13 +48,6 @@ public class Management {
 		this.fileOps = new FileOps();
 	}
 	
-	public ArrayList<Employee> getEmployeeList() {
-		return this.empList;
-	}
-
-	public HashMap<Department, ArrayList<Employee>> getMap() {
-		return this.empMap;
-	}
 
 	public boolean departmentExists(String name) {
 		return (this.deptMap.get(name) != null);
@@ -74,7 +67,7 @@ public class Management {
 		if (hasSameName(employee)) {
 			employee.fixDuplicateName(this.countSameNames(employee));
 		}
-		this.empList.add(employee);
+		this.empList.put(employee.getId(), employee);
 		this.addEmployeeToDept(employee);
 	}
 	
@@ -88,22 +81,18 @@ public class Management {
 		ThreadWorker tw = () -> {
 			Runnable task = () -> {
 				this.deptList = fileOps.loadDepartments();
-				this.deptList.stream().forEach(department -> System.out.println(department.toString()));
-				this.empList = fileOps.loadPersonnel();
-				this.empList.stream().forEach(employee -> System.out.println(employee.toString()));
-				
-				// add department to hashmap: Key = dept name, Value = department
+	
 				this.deptList.stream()
 							.forEach( department -> {
 							this.deptMap.put(department.getName(), department);
 							});
 				
-				// 
-				this.empList.stream()
-							.forEach( employee -> {
-							this.deptMap.get(employee.getDepartment())
-										.addEmployee(employee);
-							});
+				
+				fileOps.loadPersonnel().forEach(employee -> {
+					this.empList.put(employee.getId(), employee);
+					this.deptMap.get(employee.getDepartment()).addEmployee(employee);
+				});
+			
 				
 				this.deptList.stream()
 							.forEach( department -> {
@@ -116,17 +105,16 @@ public class Management {
 			executor.shutdown();
 		};
 		tw.runJob();
-		System.out.println(this.toString());
 	}
 
 	public boolean hasSameName(Employee e) {
-		return this.empList.stream()
+		return this.getEmployeeArrayList().stream()
 							.anyMatch(emp -> (emp.getFirst_name().equalsIgnoreCase(e.getFirst_name())
 				&& emp.getLast_name().equalsIgnoreCase(e.getLast_name())));
 	}
 
 	public int countSameNames(Employee e) {
-		return (int) this.empList.stream()
+		return (int) this.getEmployeeArrayList().stream()
 								.filter(emp -> (emp.getFirst_name().equalsIgnoreCase(e.getFirst_name())
 				&& emp.getLast_name().contains(e.getLast_name() + " "))).count();
 	}
@@ -147,12 +135,26 @@ public class Management {
 		return this.deptMap;
 	}
 	
-	public synchronized ArrayList<Employee> getEmpList() {
+	public synchronized ArrayList<Department> deptList() {
+		return this.deptList;
+	}
+	
+	public HashMap<Integer, Employee> getEmployeeList() {
 		return this.empList;
 	}
 	
-	public synchronized ArrayList<Department> deptList() {
-		return this.deptList;
+	
+	public ArrayList<Employee> getEmployeeArrayList() {
+		ArrayList<Employee> employeeArr = new ArrayList<Employee>();
+		this.empList.keySet().stream().forEach( key -> {
+			employeeArr.add(this.empList.get(key));
+		});
+		return employeeArr;
+	}
+	
+	
+	public HashMap<Department, ArrayList<Employee>> getMap() {
+		return this.empMap;
 	}
 	
 	public void saveDepartments() {
@@ -160,6 +162,7 @@ public class Management {
 			Runnable task = () -> {
 				fileOps.saveDepartments(this.deptList);
 			};
+			
 			ExecutorService executor = Executors.newSingleThreadExecutor();
 			executor.execute(task);
 			executor.shutdown();
@@ -170,7 +173,7 @@ public class Management {
 	public void saveEmployees() {
 		ThreadWorker tw = () -> {
 			Runnable task = () -> {
-				fileOps.saveEmployees(this.empList);
+				fileOps.saveEmployees(this.getEmployeeArrayList());
 			};
 			ExecutorService executor = Executors.newSingleThreadExecutor();
 			executor.execute(task);
@@ -178,5 +181,5 @@ public class Management {
 		};
 		tw.runJob();
 	}
-
+	
 }

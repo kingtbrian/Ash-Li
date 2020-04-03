@@ -1,11 +1,18 @@
 package application.Control.Employee;
 
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import application.Model.Employee;
 import application.Model.Management;
 import application.View.PrimaryView;
 import application.View.EmployeeView.EmployeeViewer;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 
 /**
@@ -25,6 +32,7 @@ public class EmployeeViewController {
 	private HashMap<String, String> colorMap; // used for determining color of buttons; sorting up = green, sorting down = red
 	private int index;
 	
+	
 	/**
 	 * Constructor carries the PrimaryView object to enable to setting of a child pane within the PrimaryView.
 	 * Additionally, a management object is loaded to load the grid in the view with Employee Data. 
@@ -35,8 +43,7 @@ public class EmployeeViewController {
 	public EmployeeViewController(PrimaryView primaryView, Management manager) {
 		this.primaryView = primaryView;
 		this.manager = manager;
-		System.out.println(this.manager.getEmpList().toString());
-		this.empView = new EmployeeViewer(primaryView.getScene());
+		this.empView = new EmployeeViewer(primaryView.getScene(), this.manager.getEmployeeArrayList().size());
 		this.initColorMap();
 		this.initData();
 	}
@@ -47,9 +54,8 @@ public class EmployeeViewController {
 	 */
 	public void showForm() {
 		this.setViewHandles();
-		this.empView.initLabels(this.manager.getEmpList().size());
-		this.txDataToLabels();
-		this.empView.showEmployeeView();
+		this.empView.initLabels(this.manager.getEmployeeArrayList().size());
+		this.txDataToLabels(this.manager.getEmployeeArrayList());
 		this.setViewerForm();
 	}
 	
@@ -72,37 +78,45 @@ public class EmployeeViewController {
 		
 		this.empView.getNameButton().setOnAction(event -> {
 			this.sortByName();
-			this.txDataToLabels();
-			this.empView.showEmployeeView();
 			this.setViewerForm();
 		});
 		
 		this.empView.getHireDateButton().setOnAction(event -> {
 			this.sortByDate();
-			this.txDataToLabels();
-			this.empView.showEmployeeView();
 			this.setViewerForm();
 		});
 		
 		this.empView.getDepartmentButton().setOnAction(event -> {
 			this.sortByDepartment();;
-			this.txDataToLabels();
-			this.empView.showEmployeeView();
 			this.setViewerForm();
 		});
 		
 		this.empView.getPositionButton().setOnAction(event -> {
 			this.sortByPosition();
-			this.txDataToLabels();
-			this.empView.showEmployeeView();
 			this.setViewerForm();
 		});
 		
 		this.empView.getTrainingHoursButton().setOnAction(event -> {
 			this.sortByTrainingHours();
-			this.txDataToLabels();
-			this.empView.showEmployeeView();
 			this.setViewerForm();
+		});
+		
+		this.empView.getUpdateButton().setOnAction(event -> {
+			this.empView.setUpdateTextFields(this.manager.deptList());
+			this.empView.getButtonGroup().stream()
+						.forEach( button -> {
+							button.setDisable(true);
+			});
+		});
+		
+		this.empView.getUpdateAllButton().setOnAction(event -> { 
+			this.getUpdatedEmployeeInfo();
+			this.empView.getButtonGroup().stream()
+						.forEach(button-> {
+							button.setDisable(false);
+						});
+			this.empView.uncheckBoxes();
+			this.showForm();
 		});
 		
 		return;
@@ -112,7 +126,7 @@ public class EmployeeViewController {
 	 * sets the 2d Array to the size of employees within Management
 	 */
 	public void initData() {
-		this.data = new String[this.manager.getEmpList().size()][];
+		this.data = new String[this.manager.getEmployeeList().keySet().size()][];
 	}
 	
 	/**
@@ -136,30 +150,50 @@ public class EmployeeViewController {
 	 * 
 	 * @see EmployeeView
 	 */
-	public void txDataToLabels() {
-		System.out.println("in txDataToLabels");
+	public void txDataToLabels(ArrayList<Employee> empArr) {
 		index = 0;
-		this.manager.getEmpList()
+		empArr
 					.stream()
 					.forEach( employee -> {
-						this.data[index] = new String[5];
-						System.out.println(employee.toString());
-						System.out.println(nameFormatter(employee));
-						this.data[index][0] = this.nameFormatter(employee);
-						this.data[index][1] = employee.getFormattedDate();
-						this.data[index][2] = employee.getDepartment();
-						this.data[index][3] = employee.getPosition();
-						this.data[index][4] = employee.getTrainingHours()+ "";
-						
-						System.out.println(data[index][0] 
-										 + data[index][1]
-										 + data[index][2]
-										 + data[index][3]
-										 + data[index][4]);
+						this.data[index] = new String[6];
+						this.data[index][0] = employee.getId() + "";
+						this.data[index][1] = this.nameFormatter(employee);
+						this.data[index][2] = employee.getPosition();
+						this.data[index][3] = employee.getTrainingHours()+ "";
+						this.data[index][4] = employee.getDepartment();
+						this.data[index][5] = employee.getFormattedDate();
 						index++;
 					});
 		index = 0;
 		this.empView.populateDataInLabels(this.data);
+	}
+	
+	public void sortByName() {
+		ArrayList<Employee> empArr = this.manager.getEmployeeArrayList();
+		this.empView.neutralizeButtonColors();
+		
+		if (this.colorMap.get(this.empView.getNameButton().getText()).equalsIgnoreCase("red")) {
+			empArr.sort((Employee e1, Employee e2) -> 
+							this.nameFormatter(e1).compareTo(this.nameFormatter(e2)));
+			this.redColorMap();
+			this.empView.setButtonAesthetic(this.empView.getNameButton()
+										  , this.empView.getNodeWidth()
+										  , this.empView.getNodeHeight()
+										  , this.empView.getFontSize()
+										  , Color.GREEN);
+			this.colorMap.put(this.empView.getNameButton().getText(), "green");
+			
+		} else {
+			empArr.sort((Employee e1, Employee e2) -> 
+							this.nameFormatter(e2).compareTo(this.nameFormatter(e1)));
+			this.empView.setButtonAesthetic(this.empView.getNameButton()
+										  , this.empView.getNodeWidth()
+										  , this.empView.getNodeHeight()
+										  , this.empView.getFontSize()
+										  , Color.RED);
+			this.colorMap.put(this.empView.getNameButton().getText(), "red");
+		}
+		this.txDataToLabels(empArr);
 	}
 	
 	/**
@@ -171,14 +205,13 @@ public class EmployeeViewController {
 	 * 
 	 * @see Management
 	 */
-	public void sortByName() {
+	public void sortByID() {
+		ArrayList<Employee> empArr = this.manager.getEmployeeArrayList();
 		this.empView.neutralizeButtonColors();
 		
 		if (this.colorMap.get(this.empView.getNameButton().getText()).equalsIgnoreCase("red")) {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
-						this.nameFormatter(e1).compareTo(this.nameFormatter(e2)));
-			
+			empArr.sort((Employee e1, Employee e2) -> 
+							e1.getId() - e2.getId());
 			this.redColorMap();
 			this.empView.setButtonAesthetic(this.empView.getNameButton()
 										  , this.empView.getNodeWidth()
@@ -186,12 +219,10 @@ public class EmployeeViewController {
 										  , this.empView.getFontSize()
 										  , Color.GREEN);
 			this.colorMap.put(this.empView.getNameButton().getText(), "green");
-		
-		} else {
 			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
-							this.nameFormatter(e2).compareTo(this.nameFormatter(e1)));
-
+		} else {
+			empArr.sort((Employee e1, Employee e2) -> 
+							e2.getId() - e1.getId());
 			this.empView.setButtonAesthetic(this.empView.getNameButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
@@ -199,6 +230,7 @@ public class EmployeeViewController {
 										  , Color.RED);
 			this.colorMap.put(this.empView.getNameButton().getText(), "red");
 		}
+		this.txDataToLabels(empArr);
 	}
 	
 	/**
@@ -211,13 +243,12 @@ public class EmployeeViewController {
 	 * @see Management
 	 */
 	public void sortByDate() {
+		ArrayList<Employee> empArr = this.manager.getEmployeeArrayList();
 		this.empView.neutralizeButtonColors();
 		
 		if (this.colorMap.get(this.empView.getHireDateButton().getText()).equalsIgnoreCase("red")) {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e1.getFormattedDate().compareTo(e2.getFormattedDate()));
-			
 			this.redColorMap();
 			this.empView.setButtonAesthetic(this.empView.getHireDateButton()
 										  , this.empView.getNodeWidth()
@@ -227,18 +258,16 @@ public class EmployeeViewController {
 			this.colorMap.put(this.empView.getHireDateButton().getText(), "green");
 			
 		} else {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e2.getFormattedDate().compareTo(e1.getFormattedDate()));
-		
 			this.empView.setButtonAesthetic(this.empView.getHireDateButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.RED);
 			this.colorMap.put(this.empView.getHireDateButton().getText(), "red");
-			
 		}
+		this.txDataToLabels(empArr);
 	}
 	
 	/**
@@ -251,34 +280,30 @@ public class EmployeeViewController {
 	 * @see Management
 	 */
 	public void sortByDepartment() {
+		ArrayList<Employee> empArr = this.manager.getEmployeeArrayList();
 		this.empView.neutralizeButtonColors();
+		
 		if (this.colorMap.get(this.empView.getDepartmentButton().getText()).equalsIgnoreCase("red")) {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e1.getDepartment().compareTo(e2.getDepartment()));
-			
 			this.redColorMap();
 			this.empView.setButtonAesthetic(this.empView.getDepartmentButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.GREEN);
-			
 			this.colorMap.put(this.empView.getDepartmentButton().getText(), "green");
-
 		} else {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e2.getDepartment().compareTo(e1.getDepartment()));
-			
 			this.empView.setButtonAesthetic(this.empView.getDepartmentButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.RED);
-
 			this.colorMap.put(this.empView.getDepartmentButton().getText(), "red");
 		}
+		this.txDataToLabels(empArr);
 	}
 	
 	/**
@@ -291,34 +316,31 @@ public class EmployeeViewController {
 	 * @see Management
 	 */
 	public void sortByPosition() {
+		ArrayList<Employee> empArr = this.manager.getEmployeeArrayList();
 		this.empView.neutralizeButtonColors();
+		
 		if (this.colorMap.get(this.empView.getPositionButton().getText()).equalsIgnoreCase("red")) {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e1.getPosition().compareTo(e2.getPosition()));
-			
 			this.redColorMap();
 			this.empView.setButtonAesthetic(this.empView.getPositionButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.GREEN);
-			
 			this.colorMap.put(this.empView.getPositionButton().getText(), "green");
 
 		} else {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e2.getPosition().compareTo(e1.getPosition()));
-			
 			this.empView.setButtonAesthetic(this.empView.getPositionButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.RED);
-
 			this.colorMap.put(this.empView.getPositionButton().getText(), "red");
 		}
+		this.txDataToLabels(empArr);
 	}
 	
 	/**
@@ -331,34 +353,100 @@ public class EmployeeViewController {
 	 * @see Management
 	 */
 	public void sortByTrainingHours() {
+		ArrayList<Employee> empArr = this.manager.getEmployeeArrayList();
 		this.empView.neutralizeButtonColors();
+		
 		if (this.colorMap.get(this.empView.getTrainingHoursButton().getText()).equalsIgnoreCase("red")) {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e1.getTrainingHours() - e2.getTrainingHours());
-			
 			this.redColorMap();
 			this.empView.setButtonAesthetic(this.empView.getTrainingHoursButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.GREEN);
-			
 			this.colorMap.put(this.empView.getTrainingHoursButton().getText(), "green");
 
 		} else {
-			
-			this.manager.getEmpList().sort((Employee e1, Employee e2) -> 
+			empArr.sort((Employee e1, Employee e2) -> 
 						e2.getTrainingHours() - e1.getTrainingHours());
-			
 			this.empView.setButtonAesthetic(this.empView.getTrainingHoursButton()
 										  , this.empView.getNodeWidth()
 										  , this.empView.getNodeHeight()
 										  , this.empView.getFontSize()
 										  , Color.RED);
-
 			this.colorMap.put(this.empView.getTrainingHoursButton().getText(), "red");
 		}
+		this.txDataToLabels(empArr);
+	}
+	
+	public void getUpdatedEmployeeInfo() {
+		String names[] = new String[2];
+		ArrayList<String> empInfo = new ArrayList<String>();
+		int id = -1; 
+		int row, col;
+		
+		for (row = 1; row < this.empView.getGridPaneHeight(); row++) {
+			
+			if (this.empView.getNodes()[row][0] instanceof CheckBox && ((CheckBox)this.empView.getNodes()[row][0]).isSelected()) {
+				for (col = 1; col < this.empView.getGridPaneWidth(); col++) {
+					
+					if (this.empView.getNodes()[row][col] instanceof Label) {
+						id = Integer.parseInt(((Label)this.empView.getNodes()[row][col]).getText().trim());
+						
+					} else if (this.empView.getNodes()[row][col] instanceof TextField && col == 2) {
+						names = (((TextField)this.empView.getNodes()[row][col]).getText().isEmpty())? 
+							 nameDeformatter(((TextField)this.empView.getNodes()[row][col]).getPromptText().trim()) :
+							 nameDeformatter(((TextField)this.empView.getNodes()[row][col]).getText().trim());
+							 
+						if (names.length == 2) {
+							empInfo.add(names[1]);
+							empInfo.add(names[0]);
+						}
+						
+					} else if (this.empView.getNodes()[row][col] instanceof TextField) {
+						empInfo.add(
+								(((TextField)this.empView.getNodes()[row][col]).getText().isEmpty())?
+										((TextField)this.empView.getNodes()[row][col]).getPromptText().trim() :
+										((TextField)this.empView.getNodes()[row][col]).getText().trim());
+								
+					} else if (this.empView.getNodes()[row][col] instanceof DatePicker) {
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/YYYY");
+						empInfo.add(
+								(((DatePicker)this.empView.getNodes()[row][col]).getValue() != null)?
+										((DatePicker)this.empView.getNodes()[row][col]).getValue().format(formatter) :
+										((DatePicker)this.empView.getNodes()[row][col]).getPromptText().trim());
+						
+					} else if (this.empView.getNodes()[row][col] instanceof ChoiceBox) {
+						empInfo.add(
+								(ChoiceBox.class.cast(this.empView.getNodes()[row][col])).getValue().toString()
+								);
+					}
+				}
+				
+				if (id >= 0) {
+					Employee emp = this.manager.getEmployeeList().get(id);
+					emp.setFirst_name(empInfo.get(0));
+					emp.setLast_name(empInfo.get(1));
+					emp.setPosition(empInfo.get(2));
+					emp.setDepartment(empInfo.get(4));
+					emp.setTrainingHours(Integer.parseInt(empInfo.get(3)));
+					emp.setFormattedDate(empInfo.get(5));
+				}
+				empInfo.clear();
+			}	
+		}
+		this.manager.saveEmployees();
+	}
+	
+	
+	public String[] nameDeformatter(String name) throws IllegalArgumentException {
+		if (!name.contains(",")) {
+			throw new IllegalArgumentException("Name must have a comma separating last and first name.");
+		}
+		String str[] = new String[2];
+		str = name.split(", ");
+		return str;
 	}
 	
 	/**
@@ -366,6 +454,7 @@ public class EmployeeViewController {
 	 */
 	public void initColorMap() {
 		this.colorMap = new HashMap<String, String>();
+		this.colorMap.put(this.empView.getIDSort().getText(), "red");
 		this.colorMap.put(this.empView.getNameButton().getText(), "red");
 		this.colorMap.put(this.empView.getHireDateButton().getText(), "red");
 		this.colorMap.put(this.empView.getDepartmentButton().getText(), "red");
