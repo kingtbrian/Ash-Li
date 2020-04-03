@@ -166,13 +166,11 @@ public class EmployeeCreate {
 				this.getTrainingHours().subSequence(0, this.getTrainingHours().length())) == true) { // may need .length
 																										// - 1
 			this.finalValidation();
-			System.out.println("(Valid) Number = " + this.getTrainingHours());
 			return true;
 		} else {
 			trainingHours.clear();
 			trainingHours.setPromptText("Invalid Entry: Must input a number!");
 		}
-		System.out.println("(Invalid) Number = " + this.getTrainingHours());
 		return false;
 	}
 

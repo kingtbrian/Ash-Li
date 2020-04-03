@@ -33,8 +33,6 @@ public class DepartmentCreationController {
 	}
 	
 	public void createForm() {
-		//this.test();
-		System.out.println("Department createForm() works!");
 		this.setDepartmentForm();
 		this.setCreateHandles();
 	}
@@ -46,7 +44,6 @@ public class DepartmentCreationController {
 	}
 	
 	public void departmentRecordCreateData() {
-		System.out.println("Department Record Data Works!!");
 		this.deptList.add(new Department(this.deptCreate.getName(), this.deptCreate.getPopulation()));
 
 	}
@@ -83,15 +80,6 @@ public class DepartmentCreationController {
 		});
 	}
 	
-	public void test() {
-		Department dept1 = new Department("DRP", "");
-		Department dept2 = new Department("MRC", "");
-		Department dept3 = new Department("FRC", "");
-
-		this.manager.addDepartment(dept1);
-		this.manager.addDepartment(dept2);
-		this.manager.addDepartment(dept3);
-	}
 }
 
 

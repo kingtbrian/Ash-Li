@@ -39,7 +39,7 @@ public class Employee {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("---Employee---\n" + "\tName: " + this.getFirst_name() + " " + this.getLast_name() + "\n"
+		sb.append("---Employee---\n" + "\tID: " + this.getId() +"\n\tName: " + this.getFirst_name() + " " + this.getLast_name() + "\n"
 				+ "\tPosition: " + this.getPosition() + "\n" + "\tDepartment: " + this.getDepartment() + "\n"
 				+ "\tTraining Hours: " + this.getTrainingHours() + "\n" + "\tHire Date: " + this.formattedDate + "\n");
 		return sb.toString();
@@ -68,7 +68,7 @@ public class Employee {
 	}
 
 	public void setFirst_name(String first_name) {
-		this.first_name = first_name;
+		this.first_name = first_name.substring(0, 1).toUpperCase() + first_name.substring(1).toLowerCase();
 	}
 
 	public String getLast_name() {
@@ -76,7 +76,7 @@ public class Employee {
 	}
 
 	public void setLast_name(String last_name) {
-		this.last_name = last_name;
+		this.last_name = last_name.substring(0, 1).toUpperCase() + last_name.substring(1).toLowerCase();
 	}
 
 	public String getPosition() {

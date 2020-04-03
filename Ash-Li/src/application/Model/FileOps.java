@@ -30,7 +30,6 @@ public class FileOps {
 		if (!f.exists()) {
 			try {
 				f.createNewFile();
-				System.out.println("Creating a new File - emp");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -39,7 +38,6 @@ public class FileOps {
 		if (!f.exists()) {
 			try {
 				f.createNewFile();
-				System.out.println("Creating a new File - dept");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -58,10 +56,6 @@ public class FileOps {
 			reader = new BufferedReader(new FileReader(employeeFileName));
 			while ((line = reader.readLine()) != null) {
 				String args[] = line.split(delim);
-				for (String s : args) {
-					System.out.println(pipeFilter(s));
-				}
-				//System.out.println(args.toString());
 				Employee emp = new Employee(pipeFilter(args[0])
 										  , pipeFilter(args[1])
 										  , pipeFilter(args[2])
