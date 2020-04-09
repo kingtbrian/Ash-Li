@@ -33,9 +33,6 @@ public class PrimaryView {
 	private Menu empCreate;
 	private MenuItem empCreateEmployee;
 	private MenuItem empCreateDepartment;
-	private Menu empUpdate;
-	private MenuItem empUpdateEmployee;
-	private MenuItem empUpdateDepartment;
 	private Menu empDelete;
 	private MenuItem empDeleteEmployee;
 	private MenuItem empDeleteDepartment;

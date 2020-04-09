@@ -1,4 +1,4 @@
-package application.View.EmployeeView;
+package application.View.DepartmentView;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -6,9 +6,6 @@ import java.util.ArrayList;
 
 import application.Control.Employee.EmployeeViewController;
 import application.Model.Department;
-import application.Model.Employee;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,9 +14,9 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.DropShadow;
@@ -37,40 +34,32 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-//instead of looping (n^2) through the gridpane to remove a node from a specific (row,column) cell, every time -> some value C; 
-//total time to remove C objects = C(n^2). The gridpane will be cleared, and then repopulated with nodes mapping MAX(2n^2)
 
-/**
- * This class is the view for the Viewing and Updating of Employees. 
- * 
- * @see EmployeeViewController
- * @see Employee
- *
- */
-public class EmployeeViewer {
+public class DepartmentViewer {
 	private Scene scene;
 	private AnchorPane formFrame;
 	private GridPane gridPane;
 	private Button back;
-	private Button idSort;
 	private Button nameSort;
-	private Button positionSort;
-	private Button departmentSort;
-	private Button trainingHourSort;
-	private Button hireDateSort;
+	private Button abbrSort;
+	private Button sizeSort;
 	private Button updateButton;
 	private Button updateAllButton;
 	private ArrayList<CheckBox> checkBoxes;
 	private ArrayList<Button> buttonsGroup;
-	private ArrayList<DatePicker> datesGroup;
+	private ArrayList<TextArea> textAreaList;
+	private ArrayList<ListView<String>> listViewList;
+	private Label txtDesc;
+	private Label empLabel;
 	private Label[][] labels;
 	private TextField[][] textFields;
 	private Node[][] nodes;
-	private int i;
+	private int i, row, col;
 	private int idx;
 	private int numUpdates;
 	private int gridPaneWidth;
 	private int gridPaneHeight;
+	private int numDepartments;
 	private final int rowHeight = 30;
 	private final int colWidth = 110;
 	private final int nodeHeight = rowHeight - 3;
@@ -82,11 +71,12 @@ public class EmployeeViewer {
 	 * 
 	 * @param scene
 	 */
-	public EmployeeViewer(Scene scene, int empSize) {
+	public DepartmentViewer(Scene scene, int numDepartments) {
 		this.initBoxes();
 		this.createButtons();
-		this.setGridPaneWidth(this.buttonsGroup.size());
-		this.setGridPaneHeight(empSize + 2);
+		this.setGridPaneWidth(this.buttonsGroup.size() + 2);
+		this.setNumDepartments(numDepartments);
+		this.setGridPaneHeight(this.numDepartments + 2);
 		this.initNodeKeeper();
 		this.scene = scene;
 	}
@@ -121,19 +111,50 @@ public class EmployeeViewer {
 				 button.setVisible(true);
 				 this.nodes[0][i] = button;
 				 this.gridPane.add(button, i++, 0);
-				 this.gridPane.getColumnConstraints().add(
+				 
+				 if (button.getText().equalsIgnoreCase("Size")) {
+					 this.gridPane.getColumnConstraints().add(
+							 new ColumnConstraints() {{ setPercentWidth(10);
+							 							setMinWidth(10);
+							 							setHalignment(HPos.CENTER); }});
+				 } else {
+					 this.gridPane.getColumnConstraints().add(
 						 new ColumnConstraints() {{ setPercentWidth(20);
 						 							setMinWidth(40);
 						 							setHalignment(HPos.CENTER); }});
+				 }
 			 });
 		
+		this.nodes[0][i] = this.txtDesc;
+		this.gridPane.add(this.txtDesc, i++, 0);
+		this.gridPane.getColumnConstraints().add(
+				 new ColumnConstraints() {{ setPercentWidth(20);
+				 							setMinWidth(40);
+				 							setHalignment(HPos.CENTER); }});
+		
+		this.nodes[0][i] = this.empLabel;
+		this.gridPane.add(this.empLabel, i++, 0);
+		this.gridPane.getColumnConstraints().add(
+				 new ColumnConstraints() {{ setPercentWidth(20);
+				 							setMinWidth(40);
+				 							setHalignment(HPos.CENTER); }});
+		
 		for (int row = 0; row < this.labels.length + 1; row++) {
-			this.gridPane.getRowConstraints().add(
-					new RowConstraints() {{ setPercentHeight(5);
-											setFillHeight(true);
-						}});
-					
+			if (row == 0) {
+				this.gridPane.getRowConstraints().add(
+						new RowConstraints() {{ setPercentHeight(5);
+												setFillHeight(true);
+							}});
+			} else {
+				this.gridPane.getRowConstraints().add(
+						new RowConstraints() {{ setPercentHeight(10);
+												setMinHeight(15);
+												setFillHeight(true);
+							}});
+			}	
 		}
+		
+		
 		this.populateData();
 		
 		this.nodes[this.labels.length+1][0] = this.back;
@@ -143,21 +164,60 @@ public class EmployeeViewer {
 	}
 	
 	/**
+	 * method takes data from the Employee View Controller and iterated through the Array Passed. 
+	 * Each element with be constructed into a Label, have the Label default set and stored into a label Array. 
+	 * 
+	 * @param data
+	 * @see EmployeeViewController
+	 */
+	public void populateDataInLabels(String[][] data) {
+		for (int i = 0; i < data.length; i++) {
+			this.labels[i] = new Label[this.buttonsGroup.size() - 1];
+			for (int j = 0; j < data[i].length - 1; j++) {
+				labels[i][j] = new Label(data[i][j]);
+				this.setLabelDefaults(labels[i][j]);
+			}
+			TextArea textArea = new TextArea();
+			textArea.setBackground(new Background(new BackgroundFill(
+					  Color.WHITE
+					, new CornerRadii(5)
+					, Insets.EMPTY)));
+			textArea.setBorder((new Border(new BorderStroke(
+					  Color.BLACK
+					, BorderStrokeStyle.SOLID
+					, new CornerRadii(5)
+					, new BorderWidths(2)))));
+			textArea.setWrapText(true);
+			textArea.setEditable(false);
+			textArea.setText(data[i][data[i].length - 1]);
+			this.textAreaList.add(textArea);
+		}
+	}
+	
+	/**
 	 * 
 	 */
 	public void populateData() {
-		for (int row = 0; row < labels.length; row++) {
+		for (row = 0; row < labels.length; row++) {
 			CheckBox cb = new CheckBox("Update");
-			cb.setTooltip(new Tooltip("Selects employee to update"));
+			cb.setTooltip(new Tooltip("Selects department to update"));
 			this.gridPane.add(cb, 0, row + 1);
 			this.nodes[row+1][0] = cb;
 			this.checkBoxes.add(cb);
-			for (int col = 0; col < labels[row].length; col++) {
+			for (col = 0; col < labels[row].length; col++) {
 				this.gridPane.add(this.labels[row][col], col + 1, row + 1);
 				this.nodes[row+1][col+1] = this.labels[row][col];
 				GridPane.setFillHeight(this.labels[row][col],true);
 				GridPane.setFillWidth(this.labels[row][col],true);
 			}
+			
+			this.gridPane.add(this.textAreaList.get(row), col + 1, row + 1);
+			this.nodes[row+1][col+1] = this.textAreaList.get(row);
+			col++;
+			
+			this.gridPane.add(this.listViewList.get(row), col + 1, row + 1);
+			this.nodes[row+1][col+1] = this.listViewList.get(row);
+			
 		}
 	}
 	
@@ -173,75 +233,48 @@ public class EmployeeViewer {
 				}
 			}
 		}
-		
 	}
 	
-	public void setUpdateTextFields(ArrayList<Department> deptList) {
-		this.nodes[0][0] = this.updateAllButton;
+	public ArrayList<String> setUpdateTextFields(ArrayList<Department> deptList) {
 		
+		ArrayList<String> deptKeys = new ArrayList<String>();
+		this.nodes[0][0] = this.updateAllButton;
 		idx = 0;
 		this.initTextFields(this.checkBoxes.size());
-		this.initDatePickers();
 		
 		this.checkBoxes.stream().forEach( checkBox -> {
 			if (checkBox.isSelected()) {
 				numUpdates++;
-				// creates new TextFields for the updating of employee fields, except the Date Picking field And Department
-				this.textFields[idx] = new TextField[this.labels[GridPane.getRowIndex(checkBox) - 1].length - 2];
+				// creates new TextFields for the updating of department fields, except the Date Picking field And Department
+				this.textFields[idx] = new TextField[this.labels[GridPane.getRowIndex(checkBox) - 1].length - 1];
 				
-				// cycles through labels of employee information, copying the existing information into
-				// the prompt text of the TextField. The Date picking is not reset into a Textfield. 
-				for (i = 0; i < this.labels[GridPane.getRowIndex(checkBox) - 1].length - 2; i++) {
+				for (i = 0; i < this.labels[GridPane.getRowIndex(checkBox) - 1].length - 1; i++) {
+					
 					if (i == 0) {
-						this.labels[GridPane.getRowIndex(checkBox) - 1][i].setDisable(true);
-					} else if (i == this.labels[GridPane.getRowIndex(checkBox) - 1].length - 3) {
-						TextField tf = new TextField();
-						tf.textProperty().addListener(new ChangeListener<String>() {
-						    @Override
-						    public void changed(ObservableValue<? extends String> observable, String oldValue, 
-						        String newValue) {
-						        if (!newValue.matches("\\d*")) {
-						            tf.setText(newValue.replaceAll("[^\\d]", ""));
-						        }
-						    }
-						});
-						tf.setPromptText(this.labels[GridPane.getRowIndex(checkBox) - 1][i].getText());
-						this.textFields[idx][i] = tf;
-						this.nodes[GridPane.getRowIndex(checkBox)][i + 1] = tf;
-					} else {
-						TextField tf = new TextField();
-						tf.setPromptText(this.labels[GridPane.getRowIndex(checkBox) - 1][i].getText());
-						this.textFields[idx][i] = tf;
-						this.nodes[GridPane.getRowIndex(checkBox)][i + 1] = tf;
+						deptKeys.add(this.labels[GridPane.getRowIndex(checkBox) - 1][i].getText());
 					}
+					TextField tf = new TextField();
+					tf.setPromptText(this.labels[GridPane.getRowIndex(checkBox) - 1][i].getText());
+					this.textFields[idx][i] = tf;
+					this.nodes[GridPane.getRowIndex(checkBox)][i + 1] = tf;
 				}
+				this.labels[GridPane.getRowIndex(checkBox) - 1][i].setDisable(true);
+				this.textAreaList.get(GridPane.getRowIndex(checkBox) - 1).setEditable(true);
 				idx++;
-				
-				ChoiceBox<String> choiceBox = new ChoiceBox<String>();
-				choiceBox.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-				deptList.stream().forEach(dept -> {
-						choiceBox.getItems().add(dept.getName());
-						});
-				choiceBox.setValue(this.labels[GridPane.getRowIndex(checkBox) - 1][i].getText());
-				this.nodes[GridPane.getRowIndex(checkBox)][i+1] = choiceBox;
-				i++;
-				
-				DatePicker dp = new DatePicker();
-				this.datesGroup.add(dp);
-				dp.setPromptText(this.labels[GridPane.getRowIndex(checkBox) - 1][i].getText().toString());
-				this.nodes[GridPane.getRowIndex(checkBox)][i+1] = dp;
-				
 			} else {
 				// disable labels/check boxes for fields not to be updated
 				for (i = 0; i < this.labels[GridPane.getRowIndex(checkBox) - 1].length; i++) {
 					this.labels[GridPane.getRowIndex(checkBox) - 1][i].setDisable(true);
 				}
+				this.textAreaList.get(GridPane.getRowIndex(checkBox) - 1).setDisable(true);
 				checkBox.setDisable(true);
 			}
+			
 		});
 		
 		this.removeNodesFromPane();
 		this.populateNodesIntoPane();
+		return deptKeys;
 	}
 	
 	
@@ -251,16 +284,14 @@ public class EmployeeViewer {
 	public void createButtons() {
 		this.buttonsGroup = new ArrayList<Button>();
 		this.setUpdate("Update Selected");
-		this.setIDSort("ID");
 		this.setNameSort("Name");
-		this.setPositionSort("Position");
-		this.setTrainingHourSort("Training Hours");
-		this.setDepartmentSort("Department");
-		this.setHireDateSort("Hire Date");
+		this.setAbbrSort("Abbr.");
+		this.setSizeSort("Size");
 		this.setBackButton("Back");
 		this.setUpdateAll("Update Now");
+		this.setTxtDesc("Description");
+		this.setEmpLabel("Employees");
 		this.setButtonPreferences();
-		
 		this.buttonsGroup.remove(this.back);
 		this.buttonsGroup.remove(this.updateAllButton);
 	}
@@ -319,39 +350,68 @@ public class EmployeeViewer {
 		this.addButtonToList(this.nameSort);
 	}
 	
-	public void setIDSort(String phrase) {
-		this.idSort = new Button(phrase);
-		this.idSort.setTooltip(new Tooltip("Sort by ID"));
-		this.setButtonAesthetic(this.idSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
-		this.addButtonToList(this.idSort);
+	public void setAbbrSort(String phrase) {
+		this.abbrSort = new Button(phrase);
+		this.abbrSort.setTooltip(new Tooltip("Sort by Abbreviation"));
+		this.setButtonAesthetic(this.abbrSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
+		this.addButtonToList(this.abbrSort);
 	}
 	
-	public void setPositionSort(String phrase) {
-		this.positionSort = new Button(phrase);
-		this.positionSort.setTooltip(new Tooltip("Sort by Position"));
-		this.setButtonAesthetic(this.positionSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
-		this.addButtonToList(this.positionSort);
+	public void setSizeSort(String phrase) {
+		this.sizeSort = new Button(phrase);
+		this.sizeSort.setTooltip(new Tooltip("Sort by Department Size"));
+		this.setButtonAesthetic(this.sizeSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
+		this.addButtonToList(this.sizeSort);
 	}
 	
-	public void setDepartmentSort(String phrase) {
-		this.departmentSort = new Button(phrase);
-		this.departmentSort.setTooltip(new Tooltip("Sort by Department"));
-		this.setButtonAesthetic(this.departmentSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
-		this.addButtonToList(this.departmentSort);
+	public void setTxtDesc(String phrase) {
+		this.txtDesc = new Label(phrase);
+		this.setLabelHeaders(this.txtDesc);
 	}
 	
-	public void setTrainingHourSort(String phrase) {
-		this.trainingHourSort = new Button(phrase);
-		this.trainingHourSort.setTooltip(new Tooltip("Sort by Training Hours"));
-		this.setButtonAesthetic(this.trainingHourSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
-		this.addButtonToList(this.trainingHourSort);
+	public void setEmpLabel(String phrase) {
+		this.empLabel = new Label(phrase);
+		this.setLabelHeaders(this.empLabel);
 	}
 	
-	public void setHireDateSort(String phrase) {
-		this.hireDateSort = new Button(phrase);
-		this.hireDateSort.setTooltip(new Tooltip("Sort by Hire Date"));
-		this.setButtonAesthetic(this.hireDateSort, this.nodeWidth, this.nodeHeight, fontSize, Color.BLUE);
-		this.addButtonToList(this.hireDateSort);
+	public void populateListViews(ArrayList<Department> depts) {
+		depts.stream().forEach(dept -> {
+			ListView<String> lv = new ListView<String>();
+			lv.setBackground(new Background(new BackgroundFill(
+					  Color.WHITE
+					, new CornerRadii(5)
+					, Insets.EMPTY)));
+			lv.setBorder((new Border(new BorderStroke(
+					  Color.BLACK
+					, BorderStrokeStyle.SOLID
+					, new CornerRadii(5)
+					, new BorderWidths(2)))));
+			dept.getEmployees().stream().forEach(emp -> {
+				lv.getItems().add(emp.getFirst_name() + " " + emp.getLast_name());
+			});
+			this.listViewList.add(lv);
+		});
+	}
+	
+	public void setLabelHeaders(Label l) {
+		l.setPrefSize(nodeWidth, nodeHeight);
+		l.setFont(new Font("Arial", fontSize));
+		l.setBackground(new Background(new BackgroundFill(
+								  Color.WHITE
+								, new CornerRadii(10)
+								, Insets.EMPTY)));
+		l.setBorder((new Border(new BorderStroke(
+								  Color.BLUE
+								, BorderStrokeStyle.SOLID
+								, new CornerRadii(10)
+								, new BorderWidths(2)))));
+		l.setAlignment(Pos.CENTER);
+		l.setWrapText(true);
+	}
+	
+	public void disableLabelHeaders(boolean b) {
+		this.empLabel.setDisable(b);
+		this.txtDesc.setDisable(b);
 	}
 	
 	/**
@@ -388,7 +448,7 @@ public class EmployeeViewer {
 								 Color.WHITE
 							   , new CornerRadii(10)
 							   , Insets.EMPTY)));
-		l.setPadding(new Insets(2,2,2,2));
+		l.setPadding(new Insets(4,4,4,4));
 		l.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 		l.setAlignment(Pos.CENTER);
 		l.setFont(new Font("Arial", 12));
@@ -399,23 +459,6 @@ public class EmployeeViewer {
 							   , new CornerRadii(10)
 							   , new BorderWidths(1)))));
 	}	
-	
-	/**
-	 * method takes data from the Employee View Controller and iterated through the Array Passed. 
-	 * Each element with be constructed into a Label, have the Label default set and stored into a label Array. 
-	 * 
-	 * @param data
-	 * @see EmployeeViewController
-	 */
-	public void populateDataInLabels(String[][] data) {
-		for (int i = 0; i < data.length; i++) {
-			this.labels[i] = new Label[this.buttonsGroup.size() - 1];
-			for (int j = 0; j < data[i].length; j++) {
-				labels[i][j] = new Label(data[i][j]);
-				this.setLabelDefaults(labels[i][j]);
-			}
-		}
-	}
 	
 	/**
 	 * method is to reset all button colors to Blue, after multiple sorting buttons are pressed. 
@@ -432,6 +475,11 @@ public class EmployeeViewer {
 		this.checkBoxes.stream().forEach(checkbox -> {
 			checkbox.setSelected(false);
 		});
+	}
+	
+	public void clearTextLists() {
+		this.textAreaList.clear();
+		this.listViewList.clear();
 	}
 	
 	public LocalDate convertToLocalDate(String date) {
@@ -469,12 +517,24 @@ public class EmployeeViewer {
 		this.textFields = new TextField[n][];
 	}
 	
-	public void initDatePickers() {
-		this.datesGroup = new ArrayList<DatePicker>();
+	public void initTextAreaList(int n) {
+		this.textAreaList = new ArrayList<TextArea>();
+	}
+	
+	public void initListViewList(int n) {
+		this.listViewList = new ArrayList<ListView<String>>();
 	}
 	
 	public void initBoxes() {
 		this.checkBoxes = new ArrayList<CheckBox>();
+	}
+	
+	public void setNumDepartments(int numDepartments) {
+		this.numDepartments = numDepartments;
+	}
+
+	public int getNumDepartments() {
+		return this.numDepartments;
 	}
 	
 	public ArrayList<Button> getButtonGroup() {
@@ -489,32 +549,36 @@ public class EmployeeViewer {
 		return this.nameSort;
 	}
 	
-	public Button getIDSort() {
-		return this.idSort;
-	}
-	
-	public Button getHireDateButton() {
-		return this.hireDateSort;
-	}
-	
-	public Button getDepartmentButton() {
-		return this.departmentSort;
-	}
-	
-	public Button getPositionButton() {
-		return this.positionSort;
-	}
-	
-	public Button getTrainingHoursButton() {
-		return this.trainingHourSort;
+	public Button getAbbrButton() {
+		return this.abbrSort;
 	}
 	
 	public Button getUpdateButton() {
 		return this.updateButton;
 	}
 	
+	public Button getSizeSortButton() {
+		return this.sizeSort;
+	}
+	
 	public Button getUpdateAllButton() {
 		return this.updateAllButton;
+	}
+	
+	public Label getTxtDesc() {
+		return this.txtDesc;
+	}
+	
+	public Label getEmpLabel() {
+		return this.empLabel;
+	}
+	
+	public ArrayList<TextArea> getTextAreaList() {
+		return this.textAreaList;
+	}
+	
+	public ArrayList<ListView<String>> getListViewList() {
+		return this.listViewList;
 	}
 	
 	public Node[][] getNodes() {
@@ -554,4 +618,5 @@ public class EmployeeViewer {
 	}
 
 }
+
 

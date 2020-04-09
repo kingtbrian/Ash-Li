@@ -7,6 +7,7 @@ import application.View.PrimaryView;
 public class PrimaryDepartmentController {
 	private PrimaryView primaryView;
 	private DepartmentCreationController deptCreateControl;
+	private DepartmentViewController deptViewControl; 
 	Management manager;
 
 	public PrimaryDepartmentController(PrimaryView primaryView, Management manager) {
@@ -17,5 +18,10 @@ public class PrimaryDepartmentController {
 	public void showCreateDepartmentForm() {
 		this.deptCreateControl = new DepartmentCreationController(this.primaryView, this.manager);
 		this.deptCreateControl.createForm();
+	}
+	
+	public void showViewDepartmentForm() {
+		this.deptViewControl = new DepartmentViewController(this.primaryView, this.manager);
+		this.deptViewControl.showForm();
 	}
 }

@@ -92,7 +92,8 @@ public class FileOps {
 			while ((line = reader.readLine()) != null) {
 				String args[] = line.split(delim);
 				Department dept = new Department(pipeFilter(args[0])
-											   , pipeFilter(args[1]));
+											   , pipeFilter(args[1])
+											   , pipeFilter(args[2]));
 				deptList.add(dept);
 			}
 
@@ -122,6 +123,7 @@ public class FileOps {
 			depts.stream()
 					.forEach( dept -> {
 						sb.append(commaFilter(dept.getName()) + cv
+								+ commaFilter(dept.getAbbreviation()) + cv
 								+ commaFilter(dept.getPopulation()) + nl);
 					});
 			
@@ -140,8 +142,6 @@ public class FileOps {
 			String cv = ",";
 			String nl = "\n";
 			
-			// String first_name, String last_name, String position, String department,
-			// String trainingHours, LocalDate hireDate
 			emp.stream().forEach( employee -> {
 				sb.append(commaFilter(employee.getFirst_name()) + cv 
 						+ commaFilter(employee.getLast_name()) + cv 

@@ -44,6 +44,7 @@ public class DepartmentCreate {
 	private Button back;
 	private ArrayList<Button> buttonsGroup;
 	private TextField deptName;
+	private TextField abbreviation;
 	private TextField populationServed;
 	private boolean employeeShortcutUsed = false; 
 	int i, j;
@@ -67,6 +68,7 @@ public class DepartmentCreate {
 		this.formFrame = new AnchorPane();
 		this.gp = new GridPane();
 		this.deptName = new TextField();
+		this.abbreviation = new TextField();
 		this.populationServed = new TextField();
 
 		gp.setGridLinesVisible(false);
@@ -85,9 +87,11 @@ public class DepartmentCreate {
 		AnchorPane.setRightAnchor(gp, 0.0);
 
 		Label lbl[] = { new Label("Department Name")
+					  , new Label("Abbreviation")
 					  , new Label("Population Served") };
 
 		TextField t[] = { this.deptName
+						, this.abbreviation
 						, this.populationServed };
 
 		i = 0;
@@ -120,9 +124,11 @@ public class DepartmentCreate {
 	 */
 	public void finalValidation() {
 		Label lbl[] = { new Label("Department Name")
-					  , new Label("Population Served") };
+				  , new Label("Abbreviation")
+				  , new Label("Population Served") };
 
 		Label userData[] = { new Label(this.getName())
+						   , new Label(this.getAbbreviation())
 						   , new Label(this.getPopulation()) };
 
 		gp.getChildren().clear();
@@ -226,6 +232,10 @@ public class DepartmentCreate {
 	
 	public String getName() {
 		return this.deptName.getText().trim();
+	}
+	
+	public String getAbbreviation() {
+		return this.abbreviation.getText().trim();
 	}
 	
 	public String getPopulation() {

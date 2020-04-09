@@ -4,12 +4,25 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 import application.Control.Department.DepartmentCreationController;
+import application.Model.Department;
 import application.Model.Employee;
+import application.Model.FileOps;
 import application.Model.Management;
 import application.View.PrimaryView;
 import application.View.EmployeeView.EmployeeCreate;
-import javafx.scene.control.RadioButton;
-import javafx.scene.text.Font;
+import javafx.geometry.Insets;
+import javafx.scene.Cursor;
+import javafx.scene.control.Tooltip;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.paint.Color;
 
 /**
  * This class is the controller for the view that allows the user to create a new Employee.
@@ -43,8 +56,7 @@ public class EmployeeCreationController {
 	 * @see EmployeeCreate
 	 */
 	public void createForm() {
-		this.setRadioButtons();
-		//System.out.println("Control works!");
+		this.setComboBox();
 		this.setEmployeeForm();
 		this.setCreateHandles();
 	}
@@ -70,7 +82,6 @@ public class EmployeeCreationController {
 	 *  @see Employee
 	 */
 	public void employeeRecordCreateData() {
-		System.out.println("Employee Record Data Works!!");
 		this.empList.add(new Employee(this.empCreate.getFirstName()
 									, this.empCreate.getLastName()
 									, this.empCreate.getPosition()
@@ -96,7 +107,7 @@ public class EmployeeCreationController {
 		// submit button first checks if there are departments on to add employee to and handles appropriately. 
 		this.empCreate.getSubmitButton().setOnAction(event -> {
 			if (this.empCreate.isDeptSelected()) {
-				this.empCreate.dataIsValid();
+				this.empCreate.finalValidation();
 			} else {
 				this.empCreate.setSelectDeptInstruction();
 			}
@@ -157,23 +168,44 @@ public class EmployeeCreationController {
 		String position = this.empCreate.getPosition();
 		String training = this.empCreate.getTrainingHours();
 		LocalDate ld = this.empCreate.getDate();
-		this.setRadioButtons();
+		this.setComboBox();
 		this.setEmployeeForm();
 		this.empCreate.setSavedInfo(firstName, lastName, position, training, ld);
 	}
 	
-	/**
-	 * This method creates radio buttons and a ToggleGroup for the RadioButtons. Each Department
-	 * will be attached to a RadioButton
-	 */
-	public void setRadioButtons() {
-		this.manager.getMap().keySet().stream().forEach(department -> {
-			RadioButton rb = new RadioButton(department.getName());
-			rb.setFont(new Font("Arial", 16));
-			rb.setUserData(department.getName());
-			rb.setToggleGroup(this.empCreate.getRadioToggle());
-			this.empCreate.getRadioButtons().add(rb);
+	public void setComboBox() {
+		this.empCreate.setComboBox();
+		this.empCreate.getComboBox().setBackground(new Background(new BackgroundFill(
+				 Color.WHITE
+			   , new CornerRadii(20)
+			   , Insets.EMPTY)));
+		
+		this.empCreate.getComboBox().setPrefSize(250, 30);
+		this.empCreate.getComboBox().setPadding(new Insets(3,3,3,3));
+		this.empCreate.getComboBox().setBorder((new Border(new BorderStroke(
+				 Color.BLACK
+			   , BorderStrokeStyle.SOLID
+			   , new CornerRadii(20)
+			   , new BorderWidths(2)))));
+		
+		this.empCreate.getComboBox().addEventHandler(MouseEvent.MOUSE_ENTERED, (event) -> {
+			this.empCreate.getComboBox().setEffect(new DropShadow());
+			this.primaryView.getScene().setCursor(Cursor.OPEN_HAND);
 		});
+		
+		this.empCreate.getComboBox().addEventHandler(MouseEvent.MOUSE_EXITED, (event) -> {
+			this.empCreate.getComboBox().setEffect(null);
+			this.primaryView.getScene().setCursor(Cursor.DEFAULT);
+		});
+		
+		this.empCreate.getComboBox().setPromptText("Select Department...");;
+		if (this.manager.getDeptList() == null) {
+			return;
+		}
+		this.manager.getDeptList().stream().forEach(dept -> {
+			this.empCreate.getComboBox().getItems().add(dept.getName());
+		});
+		this.empCreate.getComboBox().setTooltip(new Tooltip("Select Department from Dropdown Box for employee to be added to."));
 	}
 	
 }

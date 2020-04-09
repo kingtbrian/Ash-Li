@@ -44,7 +44,7 @@ public class DepartmentCreationController {
 	}
 	
 	public void departmentRecordCreateData() {
-		this.deptList.add(new Department(this.deptCreate.getName(), this.deptCreate.getPopulation()));
+		this.deptList.add(new Department(this.deptCreate.getName(), this.deptCreate.getAbbreviation(), this.deptCreate.getPopulation()));
 
 	}
 
@@ -66,7 +66,6 @@ public class DepartmentCreationController {
 		this.deptCreate.getConfirmationButton().setOnAction(event -> {
 			this.departmentRecordCreateData();
 			this.departmentSaveData();
-			//this.primaryView.setDefaultSecondaryView();
 			if (this.deptCreate.getEmployeeShortcutUsed()) {
 				this.empCreateController.shortcutReturn();
 			} else {

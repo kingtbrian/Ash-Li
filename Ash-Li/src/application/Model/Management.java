@@ -77,6 +77,42 @@ public class Management {
 		}
 	} 
 	
+	public void updateEmployee(int id, ArrayList<String> empInfo) {
+		
+		Employee emp = this.getEmployeeList().get(id);
+		
+		if (!this.deptMap.get(emp.getDepartment()).getName().equalsIgnoreCase(empInfo.get(4))) {
+			this.deptMap.get(emp.getDepartment()).removeEmployee(emp);
+		}
+
+		emp.setFirst_name(empInfo.get(0));
+		emp.setLast_name(empInfo.get(1));
+		emp.setPosition(empInfo.get(2));
+		emp.setDepartment(empInfo.get(4));
+		emp.setTrainingHours(Integer.parseInt(empInfo.get(3)));
+		emp.setFormattedDate(empInfo.get(5));
+		
+		this.deptMap.get(emp.getDepartment()).addEmployee(emp);
+	}
+	
+	public void updateDepartment(ArrayList<String> deptInfo, String ogKey) {
+		Department dept = this.deptMap.remove(ogKey);
+		
+		// change all employees departments to the change in the update
+		if (!deptInfo.get(0).equalsIgnoreCase(dept.getName())) {
+			dept.getEmployees().stream().forEach(emp -> {
+					emp.setDepartment(deptInfo.get(0));
+			});
+		}
+		
+		dept.setName(deptInfo.get(0));
+		dept.setAbbreviation(deptInfo.get(1));
+		dept.setPopulation(deptInfo.get(3));
+		
+		this.deptMap.put(dept.getName(), dept);
+		
+	}
+	
 	public void loadManagement() {
 		ThreadWorker tw = () -> {
 			Runnable task = () -> {
@@ -135,7 +171,7 @@ public class Management {
 		return this.deptMap;
 	}
 	
-	public synchronized ArrayList<Department> deptList() {
+	public synchronized ArrayList<Department> getDeptList() {
 		return this.deptList;
 	}
 	
