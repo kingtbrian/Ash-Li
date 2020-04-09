@@ -102,7 +102,7 @@ public class EmployeeViewController {
 		});
 		
 		this.empView.getUpdateButton().setOnAction(event -> {
-			this.empView.setUpdateTextFields(this.manager.deptList());
+			this.empView.setUpdateTextFields(this.manager.getDeptList());
 			this.empView.getButtonGroup().stream()
 						.forEach( button -> {
 							button.setDisable(true);
@@ -406,9 +406,9 @@ public class EmployeeViewController {
 						
 					} else if (this.empView.getNodes()[row][col] instanceof TextField) {
 						empInfo.add(
-								(((TextField)this.empView.getNodes()[row][col]).getText().isEmpty())?
-										((TextField)this.empView.getNodes()[row][col]).getPromptText().trim() :
-										((TextField)this.empView.getNodes()[row][col]).getText().trim());
+							(((TextField)this.empView.getNodes()[row][col]).getText().isEmpty())?
+									((TextField)this.empView.getNodes()[row][col]).getPromptText().trim() :
+									((TextField)this.empView.getNodes()[row][col]).getText().trim());
 								
 					} else if (this.empView.getNodes()[row][col] instanceof DatePicker) {
 						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/YYYY");
@@ -424,16 +424,7 @@ public class EmployeeViewController {
 					}
 				}
 				
-				if (id >= 0) {
-					Employee emp = this.manager.getEmployeeList().get(id);
-					emp.setFirst_name(empInfo.get(0));
-					emp.setLast_name(empInfo.get(1));
-					emp.setPosition(empInfo.get(2));
-					emp.setDepartment(empInfo.get(4));
-					emp.setTrainingHours(Integer.parseInt(empInfo.get(3)));
-					emp.setFormattedDate(empInfo.get(5));
-				}
-				empInfo.clear();
+				this.manager.updateEmployee(id, empInfo);
 			}	
 		}
 		this.manager.saveEmployees();

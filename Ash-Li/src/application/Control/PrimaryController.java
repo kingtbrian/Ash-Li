@@ -80,6 +80,22 @@ public class PrimaryController {
 	}
 	
 	/**
+	 * method handles the event in which the user selects to view the employees within Management. 
+	 * There is the creation of the PrimaryEmployeeController which will handles multiple 
+	 * interactions and creations of other controllers for various views which allow the user 
+	 * to CRUD an Employee. 
+	 * 
+	 * @see PrimaryEmployeeController
+	 * @see EmployeeCreationController
+	 * @see Management
+	 * @see Employee
+	 */
+	public void handleEmployeeView() {
+		this.employeeControl = new PrimaryEmployeeController(this.primaryView, this.manager);
+		this.employeeControl.showViewEmployeeForm();
+	}
+	
+	/**
 	 * method handles the event in which the user selects to create a 
 	 * new department for Management. There is the creation of the PrimaryEmployeeController
 	 * which will handles multiple interactions and creations of other controllers for various
@@ -95,20 +111,9 @@ public class PrimaryController {
 		this.departmentControl.showCreateDepartmentForm();
 	}
 	
-	/**
-	 * method handles the event in which the user selects to view the employees within Management. 
-	 * There is the creation of the PrimaryEmployeeController which will handles multiple 
-	 * interactions and creations of other controllers for various views which allow the user 
-	 * to CRUD an Employee. 
-	 * 
-	 * @see PrimaryEmployeeController
-	 * @see EmployeeCreationController
-	 * @see Management
-	 * @see Employee
-	 */
-	public void handleEmployeeView() {
-		this.employeeControl = new PrimaryEmployeeController(this.primaryView, this.manager);
-		this.employeeControl.showViewEmployeeForm();
+	public void handleDepartmentView() {
+		this.departmentControl = new PrimaryDepartmentController(this.primaryView, this.manager);
+		this.departmentControl.showViewDepartmentForm();
 	}
 	
 	/**
@@ -136,6 +141,10 @@ public class PrimaryController {
 	public void setDepartmentHandles() {
 		this.primaryView.getDepartmentCreateMenuItem().setOnAction(event -> {
 			this.handleDepartmentCreate();
+		});
+		
+		this.primaryView.getDepartmentViewMenuitem().setOnAction(event -> {
+			this.handleDepartmentView();
 		});
 	}
 

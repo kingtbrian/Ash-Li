@@ -2,19 +2,19 @@ package application.View.EmployeeView;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 //import application.Control.Employee.PrimaryEmployeeController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -45,26 +45,20 @@ public class EmployeeCreate {
 	private TextField lName;
 	private TextField position;
 	private TextField trainingHours;
+	private ComboBox<String> comboBox;
 	private DatePicker dp;
-	private ToggleGroup deptToggle;
-	private ArrayList<RadioButton> deptButtons;
 	private ArrayList<Button> buttonsGroup;
 	int i, j;
 
 	public EmployeeCreate(Scene scene) {
 		this.scene = scene;
 		this.createButtons();
-		this.initRadioButtons();
-		this.initToggle();
 	}
 
 	public AnchorPane createView() {
 		this.formFrame = new AnchorPane();
 		this.gp = new GridPane();
-		this.fName = new TextField();
-		this.lName = new TextField();
-		this.position = new TextField();
-		this.trainingHours = new TextField();
+		this.setTextFields();
 		this.dp = new DatePicker();
 
 		gp.setGridLinesVisible(false);
@@ -85,7 +79,7 @@ public class EmployeeCreate {
 		Label lbl[] = { new Label("First Name"), new Label("Last Name"), new Label("Position"),
 				new Label("Training Hours Complete"), new Label("Hire Date"), new Label("Departments") };
 
-		TextField t[] = { fName, lName, position,trainingHours };
+		TextField t[] = { fName, lName, position, trainingHours };
 
 		i = 0;
 		for (Label l : lbl) {
@@ -105,20 +99,16 @@ public class EmployeeCreate {
 		GridPane.setFillWidth(dp, true);
 		GridPane.setFillHeight(dp, true);
 		
-		if (this.deptButtons.isEmpty()) {
+		if (this.comboBox.getItems().isEmpty()) {
 			Label warning = this.makeWarningLabel("There are no current Departments on file. Please create a Department first to add "
 					+ "Employees to. Your entered information will be saved and you will return to this page :)");
 			gp.add(warning, 0, i++);
 			gp.add(this.createDeptShortcut, 1, i++);
 		} else {
-			this.deptButtons.stream().forEach(rb -> {
-				rb.setPrefSize(80, 80);
-				rb.setAlignment(Pos.CENTER);
-				gp.add(rb, 0, i++);
-				gp.getRowConstraints().add(new RowConstraints(20));
-			});
+			gp.add(this.comboBox, 1, j);
 			gp.add(this.submit, 1, ++j);
-		}	
+		}
+		
 		return this.formFrame;
 	}
 	
@@ -160,22 +150,9 @@ public class EmployeeCreate {
 		this.gp.add(this.confirmAndAdd, 1, i);
 
 	}
-
-	public Boolean dataIsValid() {
-		if (this.getTrainingHours() == null || Pattern.matches("^[0-9]*",
-				this.getTrainingHours().subSequence(0, this.getTrainingHours().length())) == true) { // may need .length
-																										// - 1
-			this.finalValidation();
-			return true;
-		} else {
-			trainingHours.clear();
-			trainingHours.setPromptText("Invalid Entry: Must input a number!");
-		}
-		return false;
-	}
-
+	
 	public Boolean isDeptSelected() {
-		return (this.deptToggle.getSelectedToggle() != null);
+		return this.comboBox.getValue() != null && !this.comboBox.getValue().isEmpty(); 
 	}
 
 	public void setSelectDeptInstruction() {
@@ -197,7 +174,7 @@ public class EmployeeCreate {
 	}
 
 	public String getDepartment() {
-		return this.deptToggle.getSelectedToggle().getUserData().toString();
+		return this.comboBox.getValue();
 	}
 
 	public String getTrainingHours() {
@@ -277,6 +254,10 @@ public class EmployeeCreate {
 							   , new CornerRadii(20)
 							   , new BorderWidths(2)))));
 	}
+	
+	public void setComboBox() {
+		this.comboBox = new ComboBox<String>();
+	}
 
 	public Button getBackButton() {
 		return this.back;
@@ -297,22 +278,11 @@ public class EmployeeCreate {
 	public Button getDeptShortcutButton() {
 		return this.createDeptShortcut;
 	}
-	public void initRadioButtons() {
-		this.deptButtons = new ArrayList<RadioButton>();
+	
+	public ComboBox<String> getComboBox() {
+		return this.comboBox;
 	}
-
-	public ArrayList<RadioButton> getRadioButtons() {
-		return this.deptButtons;
-	}
-
-	public void initToggle() {
-		this.deptToggle = new ToggleGroup();
-	}
-
-	public ToggleGroup getRadioToggle() {
-		return this.deptToggle;
-	}
-
+	
 	public void addButtonToList(Button b) {
 		this.buttonsGroup.add(b);
 	}
@@ -327,6 +297,22 @@ public class EmployeeCreate {
 				button.setEffect(null);
 				this.scene.setCursor(Cursor.DEFAULT);
 			});
+		});
+	}
+	
+	public void setTextFields() {
+		this.fName = new TextField();
+		this.lName = new TextField();
+		this.position = new TextField();
+		this.trainingHours = new TextField();
+		this.trainingHours.textProperty().addListener(new ChangeListener<String>() {
+		    @Override
+		    public void changed(ObservableValue<? extends String> observable, String oldValue, 
+		        String newValue) {
+		        if (!newValue.matches("\\d*")) {
+		        	trainingHours.setText(newValue.replaceAll("[^\\d]", ""));
+		        }
+		    }
 		});
 	}
 	

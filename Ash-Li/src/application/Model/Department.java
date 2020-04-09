@@ -9,23 +9,27 @@ import java.util.ArrayList;
  */
 public class Department {
 	private String name;
+	private String abbreviation; 
 	private String populationServed;
 	private int sizeOfDepartment;
 	private ArrayList<Employee> employees;
 
-	public Department(String name, String population) {
+	public Department(String name, String abbreviation, String population) {
 		this.setName(name);
+		this.setAbbreviation(abbreviation);
 		this.setPopulation(population);
 		employees = new ArrayList<Employee>();
 	}
 
 	public Department() {
-		this("","");
+		this("","", "");
 	}
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("---Department---\n" + "\tName: " + this.getName() + "\n\tPopulation Served: " + this.getPopulation() + "\n");
+		sb.append("---Department---\n" + "\tName: " + this.getName() 
+					+ "\n\tAbbreviation: " + this.getAbbreviation()
+					+ "\n\tPopulation Served: " + this.getPopulation() + "\n");
 		for (Employee e : this.employees) {
 			sb.append("\t" + e.toString());
 		}
@@ -48,14 +52,6 @@ public class Department {
 	public ArrayList<Employee> getEmployees() {
 		return this.employees;
 	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return this.name;
-	}
 
 	/**
 	 * method adds employee to department and updates size of department.
@@ -77,7 +73,6 @@ public class Department {
 		}
 	}
 
-	
 	public Boolean employeeExists(Employee emp) {
 		return this.employees.contains(emp);
 	}
@@ -88,6 +83,22 @@ public class Department {
 
 	public int getDepartmentSize() {
 		return this.sizeOfDepartment;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+	
+	public void setAbbreviation(String abbreviation) {
+		this.abbreviation = abbreviation;
+	}
+
+	public String getAbbreviation() {
+		return this.abbreviation;
 	}
 	
 	public void setPopulation(String pop) {
